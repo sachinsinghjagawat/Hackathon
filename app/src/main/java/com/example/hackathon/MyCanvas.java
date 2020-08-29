@@ -13,6 +13,10 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Shader;
 import android.os.Environment;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
@@ -26,6 +30,9 @@ import java.nio.channels.FileChannel;
 
 public class MyCanvas extends View {
 
+
+    private static final float BLUR_RADIUS = 25f;
+
     Paint paint , imagePaint , textPaint , doodlePaint , filterPaint , selectedPaint;
     float pxConversion = getResources().getDisplayMetrics().density;
     float x, y , xText , yText , xPos , yPos;
@@ -36,10 +43,13 @@ public class MyCanvas extends View {
     Rect rect = new Rect();
     float minText ;
     int xTemp , yTemp;
+    Context context;
 
 
     public MyCanvas(Context context , String path) {
         super(context);
+
+        this.context = context;
 
         paint = new Paint();
         textPaint= new Paint();
@@ -69,6 +79,7 @@ public class MyCanvas extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        blur(resized);
         rotate(resized);
         canvas.drawBitmap(resized, 0, y/4 , imagePaint);
 
@@ -219,7 +230,7 @@ public class MyCanvas extends View {
     }
 
 
-    public Bitmap getBitmap()
+    public  Bitmap getBitmap()
     {
         //this.measure(100, 100);
         //this.layout(0, 0, 100, 100);
@@ -232,6 +243,22 @@ public class MyCanvas extends View {
 
 
         return bmp;
+    }
+
+    public void blur(Bitmap image) {
+        if (!isBlur) return ;
+        Bitmap outputBitmap = Bitmap.createBitmap(image);
+        final RenderScript renderScript = RenderScript.create(context);
+        Allocation tmpIn = Allocation.createFromBitmap(renderScript, image);
+        Allocation tmpOut = Allocation.createFromBitmap(renderScript, outputBitmap);
+        //Intrinsic Gausian blur filter
+        ScriptIntrinsicBlur theIntrinsic = ScriptIntrinsicBlur.create(renderScript, Element.U8_4(renderScript));
+        theIntrinsic.setRadius(BLUR_RADIUS);
+        theIntrinsic.setInput(tmpIn);
+        theIntrinsic.forEach(tmpOut);
+        tmpOut.copyTo(outputBitmap);
+        resized = outputBitmap;
+        isBlur = false;
     }
 
 

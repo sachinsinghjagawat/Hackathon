@@ -36,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
         imageDetailsList = new LinkedList<>();
 
         checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
+        checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
+
 
         String rootpath = Environment.getExternalStorageDirectory().getAbsolutePath(); // this line is very important if we dont know the path of the storage
         File path = new File("/storage/emulated/0/DCIM/Camera");
